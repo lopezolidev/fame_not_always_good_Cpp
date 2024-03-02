@@ -13,6 +13,11 @@ class Edge{
     }
 }; // edge class → arista
 
+struct Nodo {
+  int valor;
+  bool visitado;
+};
+
 void merge(Edge *arr, int p, int q, int r) {
   int n1 = q - p + 1;
   int n2 = r - q;
@@ -150,12 +155,6 @@ void fillParents(int *padres, int dungeons, Edge *aristas, int cuantas_aristas){
 
   mergeSort(repetidos, 0, cuantas_aristas*2 - 1);
 
-  // for (int i = 0; i < cuantas_aristas*2; i++)
-  // {
-  //   cout << repetidos[i] << " ";
-  // }
-  // cout << endl;
-
   int k = 0;
   i = 0;
   j = 1;
@@ -170,20 +169,7 @@ void fillParents(int *padres, int dungeons, Edge *aristas, int cuantas_aristas){
     j++;
   }
 
-} //terminar función de encontrar repetido
-
-
-
-// finish function of findparent
-
-
-
-int findParent(int node, int* parents){
-
-}
-
-
-
+} // función de llenar un arreglo de padres con los nodos no repetidos
 
 
 
@@ -191,48 +177,63 @@ void kruskal(Edge *arr, int dungeons, int aristas){
   // ordenaremos el arreglo de aristas de menor a mayor. Implementamos mergeSort para un mejor desempeño del ordenamiento en caso de un elevado volúmen de datos.
   mergeSort(arr, 0, aristas - 1);
 
-  int i = 0;
-  while(i < aristas){
-      cout << "Nodo 1: " << arr[i].origen << ", Nodo 2: " << arr[i].dest << ", Peso: " << arr[i].peso << endl;
-      i++;
-  } // impresión para debugs
-
   Edge *salida = new Edge[dungeons - 1]; //arreglo que almacena el camino mínimo
 
+  //arreglo de los nodos sin alterar
   int *padres = new int[dungeons];
   fillParents(padres, dungeons, arr, aristas);
-    
-  for (int i = 0; i < dungeons; i++)
-    {
-      cout << padres[i] << " ";
-    }
-  cout << endl;
+
+  //este arreglo de nodos lo utilizaremos para señalar si dos nodos pertenecen al mismo conjunto  
+  Nodo nodes[dungeons];
+  int j = 0;
+  while(j < dungeons){
+    nodes[j].valor = padres[j];
+    nodes[j].visitado = false;
+    j++;
+  }
 
   int count = 0;
-  i = 0;
+  int i = 0;
   while(count != aristas - 1){
     Edge currentEdge = arr[i];
 
     //chequeamos si podemos agregar la arista al grafo mínimal o no
-  
-    int sourceParent = findParent(currentEdge.origen, padres);
-    int destParent = findParent(currentEdge.dest, padres);
+    Nodo* x = nullptr;
+    Nodo* y = nullptr;
 
-    if(sourceParent != destParent){
-      salida[count] = currentEdge;
-      count++;
-
-      int j = 0;
-      while(j < dungeons){
-        if(padres[j] == sourceParent){
-          padres[j] = destParent;
-        }
-        j++;
+    int l = 0;
+    while(l < dungeons){
+      if(currentEdge.origen == nodes[l].valor){
+        x = &nodes[l];
       }
+      l++;
+    } // seleccionando el uno de los nodos
+
+    l = 0;
+    while(l < dungeons){
+      if(currentEdge.dest == nodes[l].valor){
+        y = &nodes[l];
+      }
+      l++;
+    }
+
+    if(!(x->visitado && y->visitado)){
+      salida[count] = currentEdge;
+      x->visitado = !x->visitado;
+      y->visitado = !y->visitado;
+      count++;
+    } else {
+      break;
     }
     i++;
   }
 
+  cout << endl;
+  int k = 0;
+  while (k < count) {
+    cout << salida[k].origen << " " << salida[k].dest << " " << salida[k].peso << endl;
+    k++;
+  }
 
   delete[] salida;
   delete[] padres;
@@ -246,8 +247,6 @@ void getData(){
     cin >> N >> PW >> K;
 
     Edge *aristas_totales = new Edge[K]; // arreglo total de aristas
-
-    cout << "dungeons: " << N << ", " << "power: " << PW << ", " << "connections: " << K << endl; 
 
     int i = 0;
     while(i < K){
