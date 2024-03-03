@@ -22,14 +22,16 @@ public:
   int distancia;
   bool enMST;
   int padre;
-  Nodo* nodoPadre;
+  Nodo* nexos;
+  int numero_nexos;
 
   Nodo(int id){
     this->id = id;
     distancia = INF;
     enMST = false;
     padre = 0;
-    nodoPadre = nullptr;
+    nexos = nullptr;
+    numero_nexos = 0;
   }
 
   Nodo(){}
@@ -145,8 +147,6 @@ void mergeSort(int *arr, int l, int r) {
   }
 } // implementación para ordenar el arreglo de aristas de forma ascendente según el peso
 
-bool repetido(int *array, int v, int a){return true;}
-
 void fillParents(Nodo *padres, int dungeons, Edge *aristas, int cuantas_aristas){
   int i = 0;
   while(i < dungeons){
@@ -179,11 +179,8 @@ void fillParents(Nodo *padres, int dungeons, Edge *aristas, int cuantas_aristas)
   k++;
   while(j < cuantas_aristas*2){
     if(repetidos[i] != repetidos[j]){
-      padres[k].id = repetidos[j];
-      padres[k].distancia = INF;
-      padres[k].enMST = false;
-      padres[k].nodoPadre = nullptr;
-      padres[k].padre = 0;
+      Nodo nuevoNodo = Nodo(repetidos[j]);
+      padres[k] = nuevoNodo;
       k++;
     }
     i++;
@@ -192,67 +189,76 @@ void fillParents(Nodo *padres, int dungeons, Edge *aristas, int cuantas_aristas)
 
 } // función de llenar un arreglo de padres con los nodos no repetidos
 
-void recommendation(Edge* aristas, Nodo* nodos, int dungeons){
-    // NO LOGRAMOS CONCRETAR LA IMPLEMENTACIÓN DE ESTA FUNCIÓN
+void crear_nexos(Edge* arreglo_aristas, int numero_aristas, Nodo* arreglo_nodos, int dungeons){
+    int i = 0;
+    int c = 0;
+    while(i < dungeons){
+      int j = 0;
+      c = 0;
+      while(j < numero_aristas){
+        if(arreglo_aristas[j].origen == arreglo_nodos[i].id || arreglo_aristas[j].dest == arreglo_nodos[i].id ){
+          c++;
+        }
+        j++;
+      }
+
+      arreglo_nodos[i].nexos = new Nodo[c];
+      //arreglo de punteros a nodos del nodo en cuestión
+
+      arreglo_nodos[i].numero_nexos = c;
+      cout << "contador: " << c << endl;
+      cout << "nodo " << arreglo_nodos[i].id; 
+
+      Nodo* nodo_a_agregar = nullptr;
+
+      int k = 0;
+      int id_nodo_a_buscar = 0;
+      int m = 0;
+      while(k < numero_aristas && m < c){
+        if(arreglo_aristas[k].origen == arreglo_nodos[i].id){
+          id_nodo_a_buscar = arreglo_aristas[k].dest;
+        }else if(arreglo_aristas[k].dest == arreglo_nodos[i].id){
+          id_nodo_a_buscar = arreglo_aristas[k].origen; 
+        }
+        k++;
+
+        int l = 0;
+        while(l < dungeons){
+          if(arreglo_nodos[l].id == id_nodo_a_buscar){
+            arreglo_nodos[i].nexos[m] = arreglo_nodos[l];
+            m++;
+          }
+          l++;
+        }
+      }
+      int n = 0;
+      while(n < c){
+        cout << " conectado con: " << arreglo_nodos[i].nexos[n].id << endl;
+        n++;
+      }
+
+      i++;
+    }
+
+    // i = 0;
+    // while(i < dungeons){
+    //   cout << "nodo " << arreglo_nodos[i].id << " está unido a los nodos: ";
+    //   int j = 0;
+    //   while(j < arreglo_nodos[i].numero_nexos){
+    //     cout << arreglo_nodos[i].nexos[j].id << endl;
+    //     j++;
+    //   }
+    //   i++;
+    // }
+}
+
+void recommendation(Edge* arreglo_aristas, int numero_aristas, Nodo* arreglo_nodos, int dungeons){
+    crear_nexos(arreglo_aristas,numero_aristas, arreglo_nodos, dungeons);
+
 }// función que encuentra los nodos recomendados para que sean posibles raíces
 
-int quedanSinVisitar(Nodo* arreglo, int mazmorras){
-  int i = 0;
-  int sinVisitar = 0;
-  while(i < mazmorras){
-    if(!arreglo[i].enMST){
-      sinVisitar++;
-    }
-    i++;
-  }
-  return sinVisitar;
-}
 
-int contador_nodos(Edge* arreglo_aristas, int nodo_id, int aristas_totales){
-  int i = 0;
 
-  int c = 0;
-  while(i < aristas_totales){
-    if(arreglo_aristas[i].origen == nodo_id || arreglo_aristas[i].dest == nodo_id){
-      c++;
-    }
-    i++;
-  }
-
-  return c;
-}
-
-int* fill_caminos(int* arreglo_caminos, int cantidad_nodos, Edge* arreglo_aristas, int cantidad_aristas, int nodo_id){
-  int i = 0;
-  while(i < cantidad_nodos){
-    int j = 0;
-    while(j < cantidad_aristas){
-      if(arreglo_aristas[j].origen == nodo_id || arreglo_aristas[j].dest == nodo_id){
-        arreglo_caminos[i] = arreglo_aristas[j].peso;
-        // cout << "Camino N°: " << i << ": " << arreglo_caminos[i] << endl;
-        i++; 
-      }
-      j++;
-    }
-  }
-
-  return arreglo_caminos;
-} // función que recorre el arreglo de caminos a otros nodos y el arreglo de aristas, verificando si el nodo enviado es extremo de alguno de estos caminos, se inserta el peso de la arista donde ocurre esto en el arreglo de caminos. Al culminar su ejecución retorna el arreglo de caminos ya modificado con los caminos a otros nodos
-
-// int camino_minimo(int* caminos, int cantidad_caminos){
-//   int i = 0;
-//   int menor_valor = caminos[i];
-//   cout << "menor valor inicial: " << menor_valor << endl;
-//   while(i < cantidad_caminos){
-//     if(caminos[i] < menor_valor){
-//       menor_valor = caminos[i];
-//       cout << "menor valor: " << menor_valor << endl;
-//     }
-//     i++;
-//   }
-
-//   return menor_valor;
-// } //esta función retorna el menor camino entre todos los caminos posibles para un nodo particular
 
 void update_nodos(Nodo* nodo, Nodo* arreglo_nodos, Edge* arreglo_aristas, int numero_aristas, int dungeons){
   int i = 0;
@@ -353,8 +359,6 @@ void prim(Edge *arreglo_aristas, int dungeons, int aristas){
   nodos[0].distancia = 0;
   nodos[0].padre = -1;
 
-  int noVisitados = quedanSinVisitar(nodos, dungeons);
-  
   int i = 0;
   while(i < dungeons){
     Nodo* nodo_actual = calcula_siguiente_nodo(nodos, dungeons);
@@ -375,6 +379,8 @@ void prim(Edge *arreglo_aristas, int dungeons, int aristas){
     cout << salida[i].origen << " " << salida[i].dest << " " << salida[i].peso << endl;
     i++;
   } // impresión de caminos mínimos del grafo
+
+recommendation(salida, dungeons - 1, nodos, dungeons);
 
 } // función que ejecuta el algoritmo de Prim. 
 
