@@ -206,21 +206,22 @@ void crear_nexos(Edge* arreglo_aristas, int numero_aristas, Nodo* arreglo_nodos,
       //arreglo de punteros a nodos del nodo en cuestión
 
       arreglo_nodos[i].numero_nexos = c;
-      cout << "contador: " << c << endl;
-      cout << "nodo " << arreglo_nodos[i].id; 
+      i++;
+    } // bucle que genera arreglos dinámicos de punteros a Nodo para cada nodo
 
-      Nodo* nodo_a_agregar = nullptr;
-
+    i = 0;
+    while(i < dungeons){
       int k = 0;
-      int id_nodo_a_buscar = 0;
       int m = 0;
-      while(k < numero_aristas && m < c){
+      while(k < numero_aristas && m < arreglo_nodos[i].numero_nexos){
+        int id_nodo_a_buscar = 0;
         if(arreglo_aristas[k].origen == arreglo_nodos[i].id){
           id_nodo_a_buscar = arreglo_aristas[k].dest;
         }else if(arreglo_aristas[k].dest == arreglo_nodos[i].id){
           id_nodo_a_buscar = arreglo_aristas[k].origen; 
         }
-        k++;
+
+        Nodo* nodo_a_agregar = nullptr;
 
         int l = 0;
         while(l < dungeons){
@@ -229,28 +230,24 @@ void crear_nexos(Edge* arreglo_aristas, int numero_aristas, Nodo* arreglo_nodos,
             m++;
           }
           l++;
-        }
+        }      
+        k++;
       }
-      int n = 0;
-      while(n < c){
-        cout << " conectado con: " << arreglo_nodos[i].nexos[n].id << endl;
-        n++;
-      }
-
       i++;
-    }
-
-    // i = 0;
-    // while(i < dungeons){
-    //   cout << "nodo " << arreglo_nodos[i].id << " está unido a los nodos: ";
-    //   int j = 0;
-    //   while(j < arreglo_nodos[i].numero_nexos){
-    //     cout << arreglo_nodos[i].nexos[j].id << endl;
-    //     j++;
+    } // bucle que introduce los nodos al arreglo dinámico de punteros de nodos para cada nodo particular
+    
+    // int n = 0;
+    // while(n < dungeons){
+    //   int p = 0;
+    //   cout << "nodo: " << arreglo_nodos[n].id << endl;
+    //   while(p < arreglo_nodos[n].numero_nexos){
+    //     cout << "Conectado con: " << arreglo_nodos[n].nexos[p].id << endl;
+    //     p++;
     //   }
-    //   i++;
+    //   n++;
     // }
-}
+} // función que genera arreglos dinámicos de punteros a nodos para cada nodo (mazmorra). Esto sera esencial a la hora de calcular la sumatoria algebraica de cada hijo según el nodo
+
 
 void recommendation(Edge* arreglo_aristas, int numero_aristas, Nodo* arreglo_nodos, int dungeons){
     crear_nexos(arreglo_aristas,numero_aristas, arreglo_nodos, dungeons);
