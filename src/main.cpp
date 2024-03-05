@@ -24,6 +24,7 @@ public:
   int padre;
   Nodo* nexos;
   int numero_nexos;
+  bool es_raiz;
 
   Nodo(int id){
     this->id = id;
@@ -32,6 +33,7 @@ public:
     padre = 0;
     nexos = nullptr;
     numero_nexos = 0;
+    es_raiz = false;
   }
 
   Nodo(){}
@@ -248,10 +250,113 @@ void crear_nexos(Edge* arreglo_aristas, int numero_aristas, Nodo* arreglo_nodos,
     // }
 } // función que genera arreglos dinámicos de punteros a nodos para cada nodo (mazmorra). Esto sera esencial a la hora de calcular la sumatoria algebraica de cada hijo según el nodo
 
+int contar_candidatos(Nodo* arreglo_nodos, int dungeons){
+  int i = 0;
+  int contador = 0;
+  while(i < dungeons){
+    if(arreglo_nodos[i].numero_nexos < 3){
+      contador++;
+    }
+    i++;
+  }
+  return contador;
+} // función que retorna la cantidad de candidatos a raíces en el arreglo de mazmorras
 
-void recommendation(Edge* arreglo_aristas, int numero_aristas, Nodo* arreglo_nodos, int dungeons){
-    crear_nexos(arreglo_aristas,numero_aristas, arreglo_nodos, dungeons);
+int selecciona_arista(int nodo_destino_id, int nodo_candidato_id, Edge* aristas_minimas, int numero_aristas_minimas){
+  int peso_de_camino = 0;
+  
+  int i = 0;
+  while(i < numero_aristas_minimas){
+    if((aristas_minimas[i].origen == nodo_candidato_id && aristas_minimas[i].dest == nodo_destino_id) || (aristas_minimas[i].origen == nodo_destino_id && aristas_minimas[i].dest == nodo_candidato_id)){
+      peso_de_camino = aristas_minimas[i].peso;
+    }
+    i++;
+  }
 
+  return peso_de_camino;
+}
+
+int sumatoria(Nodo* nodo_candidato, int id_padre, Edge* arreglo_aristas, int numero_aristas){
+  int valor_pw_final = 0;
+  
+  Nodo* nodo_apuntador_candidato = nullptr;
+
+  int i = 0;
+  while(i < nodo_candidato->numero_nexos){
+    if(nodo_candidato->nexos[i].id != id_padre){
+      nodo_apuntador_candidato = &nodo_candidato->nexos[i];
+      if(valor_pw_final == 0){
+        valor_pw_final += (selecciona_arista(nodo_apuntador_candidato->id, nodo_candidato->id, arreglo_aristas, numero_aristas) + sumatoria(nodo_apuntador_candidato, nodo_candidato->id, arreglo_aristas, numero_aristas));
+        
+      } else {
+        valor_pw_final -= (selecciona_arista(nodo_apuntador_candidato->id, nodo_candidato->id, arreglo_aristas, numero_aristas) + sumatoria(nodo_apuntador_candidato, nodo_candidato->id, arreglo_aristas, numero_aristas));
+
+      }
+    }
+    i++;
+  }
+  
+  if(valor_pw_final < 0){
+    valor_pw_final *= -1;
+  }
+
+  // cout << "valor_pw_final: " << valor_pw_final << endl;
+
+  return valor_pw_final;
+  
+}; // en esta función sumatoria se evalúa recursivamente las condiciones para que se realice la sumatoria algebráica de las alturas cada subárbol. Considerando además que el valor a retornar debe ser positivo, en caso contrario se multiplica por -1.
+
+void recommendation(Edge* arreglo_aristas, int numero_aristas, Nodo* arreglo_nodos, int dungeons, int power){
+  crear_nexos(arreglo_aristas,numero_aristas, arreglo_nodos, dungeons);
+
+  int numero_candidatos = contar_candidatos(arreglo_nodos, dungeons);
+
+  Nodo* candidatos_raices = new Nodo[numero_candidatos];
+
+  int j = 0;
+  while(j < numero_candidatos){
+    int k = 0;
+    while(k < dungeons){
+      if(arreglo_nodos[k].numero_nexos < 3){
+        candidatos_raices[j] = arreglo_nodos[k];
+        j++;
+      }
+      k++;
+    }
+  }
+
+  int valor_pw = 0;
+  int k = 0;
+  while(k < numero_candidatos){
+    valor_pw = sumatoria(&candidatos_raices[k], -1, arreglo_aristas, numero_aristas);
+
+    if(valor_pw <= power){
+      int l = 0;
+      while(l < dungeons){
+        if(arreglo_nodos[l].id == candidatos_raices[k].id){
+          arreglo_nodos[l].es_raiz = true;
+        }
+        l++;
+      }
+    }
+
+    k++;
+  } // bucle que decide si la mazmorra candidata en cuestión es raíz o no
+
+  k = 0;
+  while(k < dungeons){
+    cout << arreglo_nodos[k].id;
+
+    if(!arreglo_nodos[k].es_raiz){
+      cout << " NOT";
+    }
+
+    cout << " RECOMMENDED " << endl;
+
+    k++;
+  } // bucle de impresión para la salida final de raíces recomendadas
+
+  delete[] candidatos_raices;
 }// función que encuentra los nodos recomendados para que sean posibles raíces
 
 
@@ -341,7 +446,7 @@ Edge* aristas_escogidas(Edge* aristas_salida, Edge* arreglo_aristas, int numero_
   return aristas_salida;
 } // función que retorna el arreglo de aristas que conforman el grafo minimal. Se escoge la arista con base a los criterios de que el nodo en cuestión sea origen o destino de la arista, el padre de dicho nodo sea el origen o destino de la arista y el peso de la misma sea la distancia mínima alcanzable del nodo particular
 
-void prim(Edge *arreglo_aristas, int dungeons, int aristas){
+void prim(Edge *arreglo_aristas, int dungeons, int aristas, int power){
   // ordenaremos el arreglo de aristas de menor a mayor. Implementamos mergeSort para un mejor desempeño del ordenamiento en caso de un elevado volúmen de datos.
   mergeSort(arreglo_aristas, 0, aristas - 1);
 
@@ -371,13 +476,16 @@ void prim(Edge *arreglo_aristas, int dungeons, int aristas){
 
   cout << endl << endl << endl;
 
+
+  cout << dungeons - 1 << endl; 
+  // impresión de cuántos caminos existen en el grafo
   i = 0;
   while(i < dungeons-1){
     cout << salida[i].origen << " " << salida[i].dest << " " << salida[i].peso << endl;
     i++;
   } // impresión de caminos mínimos del grafo
 
-recommendation(salida, dungeons - 1, nodos, dungeons);
+recommendation(salida, dungeons - 1, nodos, dungeons, power);
 
 } // función que ejecuta el algoritmo de Prim. 
 
@@ -402,7 +510,7 @@ void getData(){
         i++;
     }
 
-    prim(aristas_totales, N, K);
+    prim(aristas_totales, N, K, PW);
 
 
 
